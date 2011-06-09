@@ -1,3 +1,8 @@
+/**
+ * This test attempts to get the minimum overhead for creating and
+ * joining a single thread.
+ */
+
 #include <iostream>
 
 #include "timer.hpp"
