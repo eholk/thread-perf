@@ -2,3 +2,8 @@
 a.out
 CMakeCache.txt
 CMakeFiles
+Makefile
+cmake_install.cmake
+loaded-thread-create
+many-thread-create
+thread-create
