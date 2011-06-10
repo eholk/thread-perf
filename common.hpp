@@ -56,7 +56,10 @@ public:
   thread() 
   {
     _mutex.lock();
-    CHECKED(pthread_create(&_thread, NULL, s_run, this));
+    pthread_attr_t attr;
+    pthread_attr_init(&attr);
+    pthread_attr_setstacksize(&attr, 16384);
+    CHECKED(pthread_create(&_thread, &attr, s_run, this));
   }
 
   ~thread() {
