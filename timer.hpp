@@ -3,7 +3,14 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
+
+#ifdef _WIN32
+#include <windows.h>
+typedef UINT64 uint64_t;
+typedef INT64  int64_t;
+#else
 #include <inttypes.h>
+#endif
 
 #ifdef __MACH__
 #include <mach/mach_time.h>
@@ -21,6 +28,12 @@ class timer {
   uint64_t _start;
   uint64_t _stop;
 
+#ifdef __MACH__
+  uint64_t _time() const {
+    return mach_absolute_time();
+  }
+#endif
+
 #ifdef __linux__
   uint64_t _time() const {
     timespec t;
@@ -29,27 +42,22 @@ class timer {
   }
 #endif  
 
+#ifdef _WIN32
+  uint64_t _time() const {
+    LARGE_INTEGER qpc;
+    QueryPerformanceCounter(&qpc);
+    return qpc.QuadPart;
+  }
+#endif
+
 public:
   void start() {
     _stop = 0;
-
-#ifdef __MACH__
-    _start = mach_absolute_time();
-#endif
-
-#ifdef __linux__
     _start = _time();
-#endif
   }
 
   void stop() {
-#ifdef __MACH__
-    _stop = mach_absolute_time();
-#endif
-
-#ifdef __linux__
     _stop = _time();
-#endif
   }
 
   int64_t elapsed() const {
@@ -66,6 +74,11 @@ public:
 #endif
 #ifdef __linux__
     return elapsed();
+#endif
+#ifdef _WIN32
+    LARGE_INTEGER qpf;
+    QueryPerformanceFrequency(&qpf);
+    return elapsed() * 1000000000 / qpf.QuadPart;
 #endif
   }
 

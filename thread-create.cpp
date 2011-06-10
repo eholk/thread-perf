@@ -6,35 +6,42 @@
 #include <iostream>
 
 #include "timer.hpp"
+#include "common.hpp"
 
 const int num_iter = 10000;
 
 using namespace std;
 
-void *thread_func(void *arg) 
-{
-  return NULL;
-}
-
 int main() 
 {
-  getpid();
+#ifdef _WIN32
+    GetCurrentProcessId();
+#else
+    getpid();
+#endif
 
   timer t_base;
   t_base.start();
   for(int i = 0; i < num_iter; ++i) {
+#ifdef _WIN32
+    GetCurrentProcessId();
+#else
     getpid();
+#endif
   }
   t_base.stop();
 
   timer t_thread;
-  pthread_t thread;
   
   t_thread.start();
   for(int i = 0; i < num_iter; ++i) {
+#ifdef _WIN32
+    GetCurrentProcessId();
+#else
     getpid();
-    pthread_create(&thread, NULL, thread_func, NULL);
-    pthread_join(thread, NULL);
+#endif
+    thread t;
+    t.terminate();
   } 
   t_thread.stop();
 

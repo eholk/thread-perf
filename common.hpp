@@ -16,6 +16,28 @@
     }								\
   }
 
+#ifdef _WIN32
+class mutex {
+  HANDLE _mutex;
+
+public:
+  mutex() {
+    _mutex = CreateMutex(NULL, FALSE, NULL);
+  }
+
+  ~mutex() {
+    CloseHandle(_mutex);
+  }
+
+  void lock() {
+    WaitForSingleObject(_mutex, INFINITE);
+  }
+
+  void unlock() {
+    ReleaseMutex(_mutex);
+  }
+};
+#else
 class mutex {
   pthread_mutex_t _mutex;
 
@@ -36,10 +58,18 @@ public:
     CHECKED(pthread_mutex_unlock(&_mutex));
   }
 };
+#endif
 
 class thread {
+
+#ifdef _WIN32
+  static DWORD WINAPI s_run(LPVOID p) {
+#else
   static void *s_run(void *p) {
-    return ((thread *)p)->run();
+#endif
+    ((thread *)p)->run();
+
+    return 0;
   }
 
   void *run() {
@@ -49,21 +79,35 @@ class thread {
     return NULL;
   }
 
+#ifdef _WIN32
+  HANDLE _thread;
+#else
   pthread_t _thread;
+#endif
   mutex _mutex;
 
 public:
-  thread() 
+  thread(int stack_size = 16384)
   {
     _mutex.lock();
+
+#ifdef _WIN32
+    _thread = CreateThread(NULL, stack_size, s_run, this, 0, NULL);
+#else
     pthread_attr_t attr;
     pthread_attr_init(&attr);
-    pthread_attr_setstacksize(&attr, 16384);
+    pthread_attr_setstacksize(&attr, stack_size);
     CHECKED(pthread_create(&_thread, &attr, s_run, this));
+#endif
   }
 
   ~thread() {
+#ifdef _WIN32
+    WaitForSingleObject(_thread, INFINITE);
+    CloseHandle(_thread);
+#else
     CHECKED(pthread_join(_thread, NULL));
+#endif
   }
 
   void terminate() {

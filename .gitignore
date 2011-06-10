@@ -7,3 +7,9 @@ cmake_install.cmake
 loaded-thread-create
 many-thread-create
 thread-create
+*.exe
+*.ilk
+*.pdb
+*.manifest
+*.res
+*.resource.txt
