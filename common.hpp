@@ -4,30 +4,40 @@
 
 #pragma once
 
+#define CHECKED(call)						\
+  {								\
+    int res = (call);						\
+    if(0 != res) {						\
+      fprintf(stderr,						\
+	      #call " failed in %s at line %d, result = %d "	\
+	      "(%s) \n",					\
+	      __FILE__, __LINE__, res, strerror(res));		\
+      abort();							\
+    }								\
+  }
+
 class mutex {
   pthread_mutex_t _mutex;
 
 public:
   mutex() {
-    pthread_mutex_init(&_mutex, NULL);
+    CHECKED(pthread_mutex_init(&_mutex, NULL));
   }
 
   ~mutex() {
-    pthread_mutex_destroy(&_mutex);
+    CHECKED(pthread_mutex_destroy(&_mutex));
   }
 
   void lock() {
-    pthread_mutex_lock(&_mutex);
+    CHECKED(pthread_mutex_lock(&_mutex));
   }
 
   void unlock() {
-    pthread_mutex_unlock(&_mutex);
+    CHECKED(pthread_mutex_unlock(&_mutex));
   }
 };
 
 class thread {
-  volatile bool running;
-
   static void *s_run(void *p) {
     return ((thread *)p)->run();
   }
@@ -36,7 +46,6 @@ class thread {
     _mutex.lock();
     _mutex.unlock();
  
-    running = false;
     return NULL;
   }
 
@@ -45,18 +54,13 @@ class thread {
 
 public:
   thread() 
-    : running(false)
   {
     _mutex.lock();
-    running = true;
-    pthread_create(&_thread, NULL, s_run, this);
+    CHECKED(pthread_create(&_thread, NULL, s_run, this));
   }
 
   ~thread() {
-    if(running) {
-      terminate();
-    }
-    pthread_join(_thread, NULL);
+    CHECKED(pthread_join(_thread, NULL));
   }
 
   void terminate() {

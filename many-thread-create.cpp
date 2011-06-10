@@ -24,7 +24,7 @@ void do_threads(int n)
     threads[i].terminate();
   }
 
-  delete[] threads;
+  delete [] threads;
 
   t.stop();
 
